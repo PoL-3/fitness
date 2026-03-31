@@ -10,10 +10,14 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.fittrack.coursework"
+      "bundleIdentifier": "com.fittrack.coursework",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.fittrack.coursework",
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -22,9 +26,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "permissions": [
-        "android.permission.RECORD_AUDIO"
-      ]
+      "permissions": ["android.permission.RECORD_AUDIO"]
     },
     "web": {
       "output": "static",
@@ -62,7 +64,7 @@
       "reactCompiler": true
     },
     "extra": {
-      "apiBaseUrl": "http://localhost:3000",
+      "apiBaseUrl": "http://192.168.0.101:3000",
       "router": {},
       "eas": {
         "projectId": "7ae36dc0-0758-420a-aa41-d4befb86eaf1"

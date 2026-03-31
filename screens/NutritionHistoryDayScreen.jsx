@@ -41,6 +41,7 @@ export function NutritionHistoryDayScreen() {
         kcal: { color: colors.accent, fontSize: 15, fontWeight: '700' },
         date: { color: colors.textMuted, fontSize: 12, marginTop: 6 },
         desc: { color: colors.textMuted, fontSize: 14, marginTop: 8, lineHeight: 20 },
+        macros: { color: colors.textMuted, fontSize: 13, marginTop: 6, fontWeight: '600' },
       }),
     [colors],
   );
@@ -63,6 +64,14 @@ export function NutritionHistoryDayScreen() {
                 <Text style={styles.kcal}>{item.calories ? `${item.calories} ккал` : '—'}</Text>
               </View>
               <Text style={styles.date}>{formatShortDate(item.createdAt)}</Text>
+              {(() => {
+                const parts = [];
+                if (item.proteinG != null) parts.push(`Б ${item.proteinG} г`);
+                if (item.fatG != null) parts.push(`Ж ${item.fatG} г`);
+                if (item.carbsG != null) parts.push(`У ${item.carbsG} г`);
+                if (!parts.length) return null;
+                return <Text style={styles.macros}>{parts.join(' · ')}</Text>;
+              })()}
               {item.description ? <Text style={styles.desc}>{item.description}</Text> : null}
             </Card>
           </Pressable>

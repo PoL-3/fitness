@@ -31,7 +31,14 @@ export function NutritionScreen() {
       return list;
     }
     return list.filter((m) => {
-      const blob = [m.mealLabel, m.description, m.calories != null ? String(m.calories) : '']
+      const blob = [
+        m.mealLabel,
+        m.description,
+        m.calories != null ? String(m.calories) : '',
+        m.proteinG != null ? String(m.proteinG) : '',
+        m.fatG != null ? String(m.fatG) : '',
+        m.carbsG != null ? String(m.carbsG) : '',
+      ]
         .join(' ')
         .toLowerCase();
       return blob.includes(q);
@@ -85,6 +92,12 @@ export function NutritionScreen() {
           marginTop: 8,
           lineHeight: 20,
         },
+        macros: {
+          color: colors.textMuted,
+          fontSize: 13,
+          marginTop: 6,
+          fontWeight: '600',
+        },
         btnRow: {
           gap: 10,
           marginBottom: 8,
@@ -124,6 +137,14 @@ export function NutritionScreen() {
               </View>
               <Text style={styles.date}>{formatShortDate(item.createdAt)}</Text>
               {item.date ? <Text style={styles.dayTag}>{formatDayRu(item.date)}</Text> : null}
+              {(() => {
+                const parts = [];
+                if (item.proteinG != null) parts.push(`Б ${item.proteinG} г`);
+                if (item.fatG != null) parts.push(`Ж ${item.fatG} г`);
+                if (item.carbsG != null) parts.push(`У ${item.carbsG} г`);
+                if (!parts.length) return null;
+                return <Text style={styles.macros}>{parts.join(' · ')}</Text>;
+              })()}
               {item.description ? <Text style={styles.desc}>{item.description}</Text> : null}
             </Card>
           </Pressable>

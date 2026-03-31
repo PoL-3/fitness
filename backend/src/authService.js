@@ -23,7 +23,7 @@ async function register({ email, password, displayName }) {
     const r = await pool.query(
       `INSERT INTO users (email, display_name, password_hash)
        VALUES ($1, $2, $3)
-       RETURNING id, email, display_name, age, height_cm, weight_kg`,
+       RETURNING id, email, display_name, age, height_cm, weight_kg, gender`,
       [em, displayName?.trim() || null, hash],
     );
     return r.rows[0];
@@ -40,7 +40,7 @@ async function register({ email, password, displayName }) {
 async function login({ email, password }) {
   const em = String(email || '').trim().toLowerCase();
   const r = await pool.query(
-    `SELECT id, email, display_name, password_hash, age, height_cm, weight_kg FROM users WHERE email = $1`,
+    `SELECT id, email, display_name, password_hash, age, height_cm, weight_kg, gender FROM users WHERE email = $1`,
     [em],
   );
   const row = r.rows[0];
@@ -71,33 +71,47 @@ async function login({ email, password }) {
       age: row.age,
       heightCm: row.height_cm != null ? Number(row.height_cm) : null,
       weightKg: row.weight_kg != null ? Number(row.weight_kg) : null,
+      gender: row.gender != null ? String(row.gender) : null,
     },
   };
 }
 
 async function getProfile(userId) {
   const r = await pool.query(
-    `SELECT id, email, display_name, age, height_cm, weight_kg FROM users WHERE id = $1`,
+    `SELECT id, email, display_name, age, height_cm, weight_kg, gender FROM users WHERE id = $1`,
     [userId],
   );
   return r.rows[0];
 }
 
-async function updateProfile(userId, { displayName, age, heightCm, weightKg }) {
+function normalizeGender(g) {
+  if (g === '' || g === null || g === undefined) {
+    return null;
+  }
+  const s = String(g).trim().toLowerCase();
+  if (s === 'male' || s === 'female' || s === 'other') {
+    return s;
+  }
+  return null;
+}
+
+async function updateProfile(userId, { displayName, age, heightCm, weightKg, gender }) {
   const r = await pool.query(
     `UPDATE users SET
        display_name = $2,
        age = $3,
        height_cm = $4,
-       weight_kg = $5
+       weight_kg = $5,
+       gender = $6
      WHERE id = $1
-     RETURNING id, email, display_name, age, height_cm, weight_kg`,
+     RETURNING id, email, display_name, age, height_cm, weight_kg, gender`,
     [
       userId,
       displayName != null ? String(displayName).trim() : null,
       age === '' || age === null || age === undefined ? null : parseInt(age, 10),
       heightCm === '' || heightCm === null || heightCm === undefined ? null : Number(heightCm),
       weightKg === '' || weightKg === null || weightKg === undefined ? null : Number(weightKg),
+      normalizeGender(gender),
     ],
   );
   return r.rows[0];

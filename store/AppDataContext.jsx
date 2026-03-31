@@ -65,6 +65,9 @@ export function AppDataProvider({ children }) {
         setMeals(
           (m ? JSON.parse(m) : []).map((item) => ({
             ...item,
+            proteinG: item.proteinG != null ? Number(item.proteinG) : null,
+            fatG: item.fatG != null ? Number(item.fatG) : null,
+            carbsG: item.carbsG != null ? Number(item.carbsG) : null,
             date: item.date || toDayKey(item.createdAt),
           })),
         );
@@ -105,6 +108,9 @@ export function AppDataProvider({ children }) {
                     mealLabel: x.meal_label,
                     calories: x.calories != null ? Number(x.calories) : null,
                     description: x.description ?? null,
+                    proteinG: x.protein_g != null ? Number(x.protein_g) : null,
+                    fatG: x.fat_g != null ? Number(x.fat_g) : null,
+                    carbsG: x.carbs_g != null ? Number(x.carbs_g) : null,
                     createdAt,
                     date: toDayKey(createdAt),
                   };
@@ -197,9 +203,40 @@ export function AppDataProvider({ children }) {
             mealLabel: item.mealLabel,
             calories: item.calories,
             description: item.description,
+            proteinG: item.proteinG,
+            fatG: item.fatG,
+            carbsG: item.carbsG,
             createdAt: item.createdAt,
           },
         });
+      } catch (_) {
+        /* ignore */
+      }
+    },
+    [token],
+  );
+
+  const deleteWorkoutRemote = useCallback(
+    async (id) => {
+      if (!token) {
+        return;
+      }
+      try {
+        await apiJson(`/journal/workouts/${encodeURIComponent(id)}`, { method: 'DELETE', token });
+      } catch (_) {
+        /* ignore */
+      }
+    },
+    [token],
+  );
+
+  const deleteMealRemote = useCallback(
+    async (id) => {
+      if (!token) {
+        return;
+      }
+      try {
+        await apiJson(`/journal/meals/${encodeURIComponent(id)}`, { method: 'DELETE', token });
       } catch (_) {
         /* ignore */
       }
@@ -291,6 +328,22 @@ export function AppDataProvider({ children }) {
     [pushMealRemote],
   );
 
+  const removeWorkout = useCallback(
+    (id) => {
+      setWorkouts((prev) => prev.filter((w) => w.id !== id));
+      deleteWorkoutRemote(id);
+    },
+    [deleteWorkoutRemote],
+  );
+
+  const removeMeal = useCallback(
+    (id) => {
+      setMeals((prev) => prev.filter((m) => m.id !== id));
+      deleteMealRemote(id);
+    },
+    [deleteMealRemote],
+  );
+
   const setGoalsSafe = useCallback((g) => {
     setGoals(g);
   }, []);
@@ -300,16 +353,24 @@ export function AppDataProvider({ children }) {
   }, []);
 
   const addExerciseGoal = useCallback((entry) => {
-    const metricTargets =
-      entry?.metricTargets && typeof entry.metricTargets === 'object'
-        ? {
-            // В интерфейсе будут поля weight / reps / duration / sets.
-            weight: entry.metricTargets.weight != null ? Number(entry.metricTargets.weight) : undefined,
-            reps: entry.metricTargets.reps != null ? Number(entry.metricTargets.reps) : undefined,
-            duration: entry.metricTargets.duration != null ? Number(entry.metricTargets.duration) : undefined,
-            sets: entry.metricTargets.sets != null ? Number(entry.metricTargets.sets) : undefined,
-          }
-        : null;
+    let metricTargets = null;
+    if (entry?.metricTargets && typeof entry.metricTargets === 'object') {
+      const mt = entry.metricTargets;
+      const o = {};
+      if (mt.weight != null && Number.isFinite(Number(mt.weight)) && Number(mt.weight) > 0) {
+        o.weight = Number(mt.weight);
+      }
+      if (mt.reps != null && Number.isFinite(Number(mt.reps)) && Number(mt.reps) > 0) {
+        o.reps = Math.round(Number(mt.reps));
+      }
+      if (mt.duration != null && Number.isFinite(Number(mt.duration)) && Number(mt.duration) > 0) {
+        o.duration = Math.round(Number(mt.duration));
+      }
+      if (mt.sets != null && Number.isFinite(Number(mt.sets)) && Number(mt.sets) > 0) {
+        o.sets = Math.round(Number(mt.sets));
+      }
+      metricTargets = Object.keys(o).length ? o : null;
+    }
 
     const metricType = entry?.metricType;
     const targetValue = entry?.targetValue;
@@ -371,6 +432,8 @@ export function AppDataProvider({ children }) {
       getMealById,
       updateWorkout,
       updateMeal,
+      removeWorkout,
+      removeMeal,
     }),
     [
       workouts,
@@ -391,6 +454,8 @@ export function AppDataProvider({ children }) {
       getMealById,
       updateWorkout,
       updateMeal,
+      removeWorkout,
+      removeMeal,
     ],
   );
 

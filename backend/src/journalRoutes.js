@@ -18,6 +18,22 @@ router.get('/workouts', async (req, res) => {
   }
 });
 
+router.delete('/workouts/:id', async (req, res) => {
+  const id = req.params?.id;
+  if (!id) {
+    return res.status(400).json({ ok: false, error: 'Нужен id' });
+  }
+  try {
+    const r = await pool.query(`DELETE FROM app_workouts WHERE id = $1 AND user_id = $2`, [String(id), req.userId]);
+    if (r.rowCount === 0) {
+      return res.status(404).json({ ok: false, error: 'Не найдено' });
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 router.post('/workouts', async (req, res) => {
   const { id, title, durationMin, type, notes, createdAt } = req.body || {};
   if (!id || !title) {
@@ -53,7 +69,7 @@ router.post('/workouts', async (req, res) => {
 router.get('/meals', async (req, res) => {
   try {
     const r = await pool.query(
-      `SELECT id, meal_label, calories, description, created_at
+      `SELECT id, meal_label, calories, description, protein_g, fat_g, carbs_g, created_at
        FROM app_meals WHERE user_id = $1 ORDER BY created_at DESC`,
       [req.userId],
     );
@@ -63,19 +79,38 @@ router.get('/meals', async (req, res) => {
   }
 });
 
+router.delete('/meals/:id', async (req, res) => {
+  const id = req.params?.id;
+  if (!id) {
+    return res.status(400).json({ ok: false, error: 'Нужен id' });
+  }
+  try {
+    const r = await pool.query(`DELETE FROM app_meals WHERE id = $1 AND user_id = $2`, [String(id), req.userId]);
+    if (r.rowCount === 0) {
+      return res.status(404).json({ ok: false, error: 'Не найдено' });
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 router.post('/meals', async (req, res) => {
-  const { id, mealLabel, calories, description, createdAt } = req.body || {};
+  const { id, mealLabel, calories, description, proteinG, fatG, carbsG, createdAt } = req.body || {};
   if (!id || !mealLabel) {
     return res.status(400).json({ ok: false, error: 'Нужны id и mealLabel' });
   }
   try {
     await pool.query(
-      `INSERT INTO app_meals (id, user_id, meal_label, calories, description, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO app_meals (id, user_id, meal_label, calories, description, protein_g, fat_g, carbs_g, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        ON CONFLICT (id) DO UPDATE SET
          meal_label = EXCLUDED.meal_label,
          calories = EXCLUDED.calories,
          description = EXCLUDED.description,
+         protein_g = EXCLUDED.protein_g,
+         fat_g = EXCLUDED.fat_g,
+         carbs_g = EXCLUDED.carbs_g,
          created_at = EXCLUDED.created_at
        WHERE app_meals.user_id = EXCLUDED.user_id`,
       [
@@ -84,6 +119,9 @@ router.post('/meals', async (req, res) => {
         String(mealLabel).slice(0, 255),
         calories != null ? parseInt(calories, 10) : null,
         description != null ? String(description) : null,
+        proteinG != null && proteinG !== '' ? Number(proteinG) : null,
+        fatG != null && fatG !== '' ? Number(fatG) : null,
+        carbsG != null && carbsG !== '' ? Number(carbsG) : null,
         Number(createdAt) || Date.now(),
       ],
     );

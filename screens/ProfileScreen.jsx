@@ -22,6 +22,9 @@ export function ProfileScreen() {
   const { user, token, logout, setAvatarUri, avatarUri, updateProfileRemote } = useAuth();
   const { colors, isDark, setDark } = useThemeColors();
   const [displayName, setDisplayName] = useState(user?.displayName || '');
+  const [gender, setGender] = useState(
+    user?.gender === 'male' || user?.gender === 'female' || user?.gender === 'other' ? user.gender : null,
+  );
   const [age, setAge] = useState(user?.age != null ? String(user.age) : '');
   const [birthDate, setBirthDate] = useState('');
   const [heightCm, setHeightCm] = useState(user?.heightCm != null ? String(user.heightCm) : '');
@@ -48,6 +51,7 @@ export function ProfileScreen() {
   useEffect(() => {
     if (user) {
       setDisplayName(user.displayName || '');
+      setGender(user.gender === 'male' || user.gender === 'female' || user.gender === 'other' ? user.gender : null);
       setAge(user.age != null ? String(user.age) : '');
       setHeightCm(user.heightCm != null ? String(user.heightCm) : '');
       setWeightKg(user.weightKg != null ? String(user.weightKg) : '');
@@ -128,6 +132,7 @@ export function ProfileScreen() {
         age: computedAge != null ? computedAge : a.value,
         heightCm: h.value,
         weightKg: w.value,
+        gender,
       });
       if (computedAge != null && birthDate) {
         const key = `@fitness/birthday:${user?.id}`;
@@ -190,6 +195,28 @@ export function ProfileScreen() {
           <Text style={[styles.label, { color: colors.accent }]}>Аккаунт</Text>
           <Text style={[styles.email, { color: colors.text }]}>{user.email}</Text>
           <LabeledInput label="Имя" value={displayName} onChangeText={setDisplayName} />
+          <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Пол</Text>
+          <View style={styles.genderRow}>
+            <GenderChip
+              label="Мужской"
+              selected={gender === 'male'}
+              onPress={() => setGender('male')}
+              colors={colors}
+            />
+            <GenderChip
+              label="Женский"
+              selected={gender === 'female'}
+              onPress={() => setGender('female')}
+              colors={colors}
+            />
+            <GenderChip
+              label="Другой"
+              selected={gender === 'other'}
+              onPress={() => setGender('other')}
+              colors={colors}
+            />
+            <GenderChip label="Не указан" selected={gender == null} onPress={() => setGender(null)} colors={colors} />
+          </View>
           {!birthDate ? (
             <LabeledInput
               label="Дата рождения (YYYY-MM-DD)"
@@ -242,6 +269,23 @@ export function ProfileScreen() {
   );
 }
 
+function GenderChip({ label, selected, onPress, colors }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[
+        styles.genderChip,
+        {
+          borderColor: colors.border,
+          backgroundColor: selected ? colors.chipSelectedBg : colors.surface2,
+        },
+      ]}
+    >
+      <Text style={{ color: selected ? colors.text : colors.textMuted, fontWeight: '700', fontSize: 13 }}>{label}</Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   card: {
     marginBottom: 14,
@@ -290,5 +334,23 @@ const styles = StyleSheet.create({
   msg: {
     marginTop: 12,
     fontSize: 14,
+  },
+  fieldLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 8,
+    marginTop: 4,
+  },
+  genderRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 14,
+  },
+  genderChip: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
   },
 });

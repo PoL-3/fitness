@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { StyleSheet, Text } from 'react-native';
+import { Alert, StyleSheet, Text } from 'react-native';
 
 import { AppScreen } from '@/components/AppScreen';
 import { Card } from '@/components/Card';
@@ -13,7 +13,7 @@ import { formatExercisesForDisplay, splitNotesAndExercises } from '@/utils/worko
 export function WorkoutDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
-  const { getWorkoutById } = useAppData();
+  const { getWorkoutById, removeWorkout } = useAppData();
   const { colors } = useThemeColors();
   const item = getWorkoutById(typeof id === 'string' ? id : id?.[0]);
 
@@ -61,6 +61,24 @@ export function WorkoutDetailScreen() {
       </Card>
 
       <PrimaryButton title="Редактировать" onPress={() => router.push(`/edit-workout/${item.id}`)} />
+      <PrimaryButton
+        title="Удалить тренировку"
+        variant="outline"
+        onPress={() => {
+          Alert.alert('Удалить тренировку?', 'Запись будет удалена с устройства и с сервера (если вы вошли в аккаунт).', [
+            { text: 'Отмена', style: 'cancel' },
+            {
+              text: 'Удалить',
+              style: 'destructive',
+              onPress: () => {
+                removeWorkout(item.id);
+                router.back();
+              },
+            },
+          ]);
+        }}
+        style={styles.gapBtn}
+      />
     </AppScreen>
   );
 }
@@ -98,5 +116,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 4,
     lineHeight: 22,
+  },
+  gapBtn: {
+    marginTop: 10,
   },
 });

@@ -170,6 +170,7 @@ export function GoalsScreen() {
                     <Text style={[styles.exMeta, { color: colors.textMuted }]}>
                       {g.metricTargets
                         ? Object.entries(g.metricTargets)
+                            .filter(([, v]) => v != null && v !== '' && Number.isFinite(Number(v)))
                             .map(([k, v]) => `${metricTypeLabel(k)} → ${v}`)
                             .join(' · ')
                         : `${metricTypeLabel(g.metricType)} → ${g.targetValue}`}

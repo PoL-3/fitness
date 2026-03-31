@@ -16,6 +16,9 @@ export function AddMealScreen() {
   const { colors } = useThemeColors();
   const [mealLabel, setMealLabel] = useState('');
   const [calories, setCalories] = useState('');
+  const [proteinG, setProteinG] = useState('');
+  const [fatG, setFatG] = useState('');
+  const [carbsG, setCarbsG] = useState('');
   const [description, setDescription] = useState('');
   const [dateStr, setDateStr] = useState(todayDayKey());
   const [error, setError] = useState('');
@@ -28,6 +31,9 @@ export function AddMealScreen() {
     if (m) {
       setMealLabel(m.mealLabel || '');
       setCalories(m.calories != null ? String(m.calories) : '');
+      setProteinG(m.proteinG != null ? String(m.proteinG) : '');
+      setFatG(m.fatG != null ? String(m.fatG) : '');
+      setCarbsG(m.carbsG != null ? String(m.carbsG) : '');
       setDescription(m.description || '');
       setDateStr(m.date || todayDayKey());
     }
@@ -49,10 +55,28 @@ export function AddMealScreen() {
       setError(cal.error);
       return;
     }
+    const p = parseOptionalPositiveNumber(proteinG, 'Белки (г)', 2000);
+    if (!p.ok) {
+      setError(p.error);
+      return;
+    }
+    const f = parseOptionalPositiveNumber(fatG, 'Жиры (г)', 2000);
+    if (!f.ok) {
+      setError(f.error);
+      return;
+    }
+    const c = parseOptionalPositiveNumber(carbsG, 'Углеводы (г)', 2000);
+    if (!c.ok) {
+      setError(c.error);
+      return;
+    }
     const day = dateStr.trim();
     const payload = {
       mealLabel: mealLabel.trim(),
       calories: cal.value != null ? Math.round(cal.value) : null,
+      proteinG: p.value != null ? Math.round(p.value * 10) / 10 : null,
+      fatG: f.value != null ? Math.round(f.value * 10) / 10 : null,
+      carbsG: c.value != null ? Math.round(c.value * 10) / 10 : null,
       description: description.trim() || null,
       date: day,
     };
@@ -90,6 +114,27 @@ export function AddMealScreen() {
         keyboardType="number-pad"
         value={calories}
         onChangeText={setCalories}
+      />
+      <LabeledInput
+        label="Белки (г)"
+        placeholder="опционально"
+        keyboardType="decimal-pad"
+        value={proteinG}
+        onChangeText={setProteinG}
+      />
+      <LabeledInput
+        label="Жиры (г)"
+        placeholder="опционально"
+        keyboardType="decimal-pad"
+        value={fatG}
+        onChangeText={setFatG}
+      />
+      <LabeledInput
+        label="Углеводы (г)"
+        placeholder="опционально"
+        keyboardType="decimal-pad"
+        value={carbsG}
+        onChangeText={setCarbsG}
       />
       <LabeledInput
         label="Что ели"

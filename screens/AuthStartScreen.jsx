@@ -1,4 +1,3 @@
-import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useEffect, useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
@@ -8,7 +7,7 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { useAuth } from '@/store/AuthContext';
 import { useThemeColors } from '@/store/ThemeContext';
 
-export function WelcomeScreen() {
+export function AuthStartScreen() {
   const { colors } = useThemeColors();
   const { user, ready, token } = useAuth();
 
@@ -25,40 +24,33 @@ export function WelcomeScreen() {
         inner: {
           flex: 1,
           justifyContent: 'center',
-          minHeight: 480,
-        },
-        logo: {
-          width: 140,
-          height: 140,
-          alignSelf: 'center',
-          marginBottom: 28,
-          borderRadius: 28,
+          minHeight: 400,
         },
         title: {
-          fontSize: 28,
+          fontSize: 24,
           fontWeight: '800',
           color: colors.text,
-          lineHeight: 36,
-          marginBottom: 12,
+          marginBottom: 8,
           textAlign: 'center',
         },
-        text: {
-          fontSize: 16,
-          color: colors.textMuted,
-          lineHeight: 24,
-          marginBottom: 32,
-          textAlign: 'center',
-        },
-        bullet: {
+        subtitle: {
           fontSize: 15,
           color: colors.textMuted,
           lineHeight: 22,
-          marginBottom: 8,
-          paddingLeft: 4,
-        },
-        bulletBlock: {
-          alignSelf: 'stretch',
           marginBottom: 28,
+          textAlign: 'center',
+        },
+        gap: {
+          marginTop: 12,
+        },
+        footnote: {
+          marginTop: 24,
+        },
+        footnoteText: {
+          fontSize: 12,
+          color: colors.textMuted,
+          lineHeight: 18,
+          textAlign: 'center',
         },
         loadingWrap: {
           flex: 1,
@@ -93,17 +85,20 @@ export function WelcomeScreen() {
   return (
     <AppScreen scroll>
       <View style={styles.inner}>
-        <Image source={require('../assets/images/icon.png')} style={styles.logo} contentFit="contain" />
-        <Text style={styles.title}>Добро пожаловать в FitTrack</Text>
-        <Text style={styles.text}>
-          Всё для регулярных тренировок и осознанного питания в одном приложении.
-        </Text>
-        <View style={styles.bulletBlock}>
-          <Text style={styles.bullet}>• Тренировки и история занятий</Text>
-          <Text style={styles.bullet}>• Дневник питания и калории</Text>
-          <Text style={styles.bullet}>• Цели, прогресс и напоминания</Text>
+        <Text style={styles.title}>Продолжить</Text>
+        <Text style={styles.subtitle}>Войдите в существующий аккаунт или зарегистрируйтесь — данные синхронизируются с сервером.</Text>
+        <PrimaryButton title="Войти" onPress={() => router.push('/login')} />
+        <PrimaryButton
+          title="Регистрация"
+          variant="outline"
+          onPress={() => router.push('/register')}
+          style={styles.gap}
+        />
+        <View style={styles.footnote}>
+          <Text style={styles.footnoteText}>
+            Продолжая, вы соглашаетесь использовать FitTrack для персонального трекинга.
+          </Text>
         </View>
-        <PrimaryButton title="Начать работу" onPress={() => router.push('/auth-start')} />
       </View>
     </AppScreen>
   );

@@ -6,6 +6,7 @@ import { AppScreen } from '@/components/AppScreen';
 import { LabeledInput } from '@/components/LabeledInput';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { ScreenHeader } from '@/components/ScreenHeader';
+import { apiJson, getApiBaseUrl } from '@/constants/api';
 import { useAuth } from '@/store/AuthContext';
 import { useThemeColors } from '@/store/ThemeContext';
 import { isValidEmail, validateRequired } from '@/utils/validation';
@@ -17,6 +18,8 @@ export function LoginScreen() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [diag, setDiag] = useState('');
+  const [diagLoading, setDiagLoading] = useState(false);
 
   async function handleLogin() {
     setError('');
@@ -45,6 +48,23 @@ export function LoginScreen() {
     }
   }
 
+  async function handleCheckApi() {
+    setDiagLoading(true);
+    try {
+      const base = getApiBaseUrl();
+      const { res, data } = await apiJson('/health');
+      if (res.ok) {
+        setDiag(`API OK: ${base} | db=${data?.db || 'unknown'}`);
+      } else {
+        setDiag(`API ответил ${res.status}: ${base}`);
+      }
+    } catch (e) {
+      setDiag(`Сеть недоступна: ${getApiBaseUrl()} | ${e?.message || 'fetch failed'}`);
+    } finally {
+      setDiagLoading(false);
+    }
+  }
+
   return (
     <AppScreen scroll>
       <ScreenHeader title="Вход" subtitle="Email и пароль (данные на вашем backend)" />
@@ -52,6 +72,15 @@ export function LoginScreen() {
       <LabeledInput label="Email" keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
       <LabeledInput label="Пароль" secureTextEntry value={password} onChangeText={setPassword} />
       <PrimaryButton title="Войти" onPress={handleLogin} loading={loading} />
+      <PrimaryButton
+        title="Проверить подключение к API"
+        variant="outline"
+        onPress={handleCheckApi}
+        loading={diagLoading}
+        style={styles.diagBtn}
+      />
+      <Text style={[styles.diagText, { color: colors.textMuted }]}>API URL: {getApiBaseUrl()}</Text>
+      {diag ? <Text style={[styles.diagText, { color: colors.textMuted }]}>{diag}</Text> : null}
       <Link href="/register" asChild>
         <Pressable style={styles.linkWrap}>
           <Text style={[styles.link, { color: colors.accent }]}>Нет аккаунта — зарегистрироваться</Text>
@@ -69,6 +98,13 @@ const styles = StyleSheet.create({
   linkWrap: {
     marginTop: 16,
     paddingVertical: 8,
+  },
+  diagBtn: {
+    marginTop: 10,
+  },
+  diagText: {
+    marginTop: 8,
+    fontSize: 12,
   },
   link: {
     fontSize: 15,

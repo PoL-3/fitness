@@ -16,6 +16,44 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npx expo start
    ```
 
+## Backend (Express API) + PostgreSQL
+
+В проекте есть backend в папке `backend/`. Фронт ходит в API через `constants/api.js`:
+
+- В dev (Expo Go) адрес API берётся из `app.json → expo.extra.apiBaseUrl`
+- В EAS build (APK/preview/production) адрес API берётся из `EXPO_PUBLIC_API_BASE_URL` на этапе сборки
+
+### Быстрый запуск backend локально
+
+```bash
+cd backend
+npm install
+cp .env.example .env
+node src/server.js
+```
+
+Проверка здоровья:
+
+```bash
+curl http://localhost:3000/health
+```
+
+### Инициализация схемы БД (локально или на VPS)
+
+В `backend/` лежат SQL файлы:
+
+- `schema.sql` — базовая схема (users/plans/workouts/meals) + demo user
+- `schema_migration_v2.sql` — добавляет auth поля + таблицы дневника (`app_workouts`, `app_meals`)
+- `schema_migration_v3.sql` — добавляет поля БЖУ и gender
+
+Пример применения:
+
+```bash
+psql "postgresql://<user>:<pass>@<host>:5432/<db>" -f backend/schema.sql
+psql "postgresql://<user>:<pass>@<host>:5432/<db>" -f backend/schema_migration_v2.sql
+psql "postgresql://<user>:<pass>@<host>:5432/<db>" -f backend/schema_migration_v3.sql
+```
+
 In the output, you'll find options to open the app in a
 
 - [development build](https://docs.expo.dev/develop/development-builds/introduction/)

@@ -25,6 +25,7 @@ function RootStack() {
         <AppDataProvider>
           <Stack screenOptions={stackScreenOptions}>
             <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="auth-start" options={{ title: 'Начало работы', headerBackTitle: 'Назад' }} />
             <Stack.Screen name="login" options={{ title: 'Вход' }} />
             <Stack.Screen name="register" options={{ title: 'Регистрация' }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -65,6 +66,7 @@ function RootStack() {
               }}
             />
             <Stack.Screen name="progress" options={{ title: 'Прогресс', headerBackTitle: 'Назад' }} />
+            <Stack.Screen name="plan-overview" options={{ title: 'Весь план', headerBackTitle: 'Назад' }} />
             <Stack.Screen
               name="celebration"
               options={{

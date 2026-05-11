@@ -1,5 +1,8 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
+# Windows: если под корень проекта случайно попала папка профиля/кэша (ломает EAS: casing + лишний архив)
+/AppData/
+
 # dependencies
 node_modules/
 

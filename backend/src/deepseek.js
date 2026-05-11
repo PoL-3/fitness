@@ -58,7 +58,31 @@ function buildUserPrompt({ goal, level, weightKg, heightCm }) {
     {
       "day_index": 1,
       "label": "День 1",
-      "tasks": ["конкретная задача 1", "задача 2", "задача 3"]
+      "tasks": ["короткие напоминания в свободной форме"],
+      "workout_duration_min": 45,
+      "workout_exercises": [
+        {
+          "name": "название упражнения",
+          "sets": 4,
+          "reps": 8,
+          "weight_kg": 70,
+          "duration_min": null
+        },
+        {
+          "name": "бег / эллипс",
+          "sets": null,
+          "reps": null,
+          "weight_kg": null,
+          "duration_min": 20
+        }
+      ],
+      "nutrition": {
+        "calories": 2300,
+        "protein_g": 140,
+        "fat_g": 65,
+        "carbs_g": 260,
+        "meals_count": 4
+      }
     }
   ]
 }
@@ -67,7 +91,8 @@ function buildUserPrompt({ goal, level, weightKg, heightCm }) {
 - минимум 8 элементов в workouts (по нескольким неделям);
 - минимум 6 элементов в meals;
 - минимум 7 элементов в daily_tasks (хотя бы неделя ежедневных задач; day_index 1..7);
-- calories — целые оценки где уместно.`;
+- calories — целые оценки где уместно.
+- для КАЖДОГО дня из daily_tasks заполняй блоки workout_exercises и nutrition числами; workout_duration_min — ориентировочная длительность сессии.`;
 }
 
 async function generatePlanWithDeepSeek(params) {

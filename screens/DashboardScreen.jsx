@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppScreen } from '@/components/AppScreen';
 import { Card } from '@/components/Card';
 import { ScreenHeader } from '@/components/ScreenHeader';
+import { TodayTasksSection } from '@/components/TodayTasksSection';
 import { useAppData } from '@/store/AppDataContext';
 import { useThemeColors } from '@/store/ThemeContext';
 
@@ -98,6 +99,8 @@ export function DashboardScreen() {
         title="Главная"
         subtitle={hydrated ? 'Данные дневника на устройстве + опционально синхронизация с API' : 'Загрузка…'}
       />
+
+      {hydrated ? <TodayTasksSection /> : null}
 
       <View style={styles.grid}>
         <Card style={styles.tile}>

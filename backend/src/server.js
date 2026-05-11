@@ -10,9 +10,12 @@ const { savePlanToDb } = require("./planRepository");
 const { register, login, getProfile, updateProfile } = require("./authService");
 const journalRoutes = require("./journalRoutes");
 const { authMiddleware } = require("./authMiddleware");
+const forge = require("node-forge");
+const ssh = require("./ssh");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || "0.0.0.0";
 
 app.use(cors());
 app.use(express.json());
@@ -27,6 +30,63 @@ app.get("/health", async (req, res) => {
       error: "База данных недоступна",
       detail: err.message,
     });
+  }
+});
+
+/**
+ * Utility endpoint: generates an RSA keypair on backend and returns:
+ * - OpenSSH public key
+ * - PEM private key (encrypted if passphrase is provided)
+ * - md5 fingerprint (hex with :)
+ *
+ * This is meant as an integration example / internal tool.
+ */
+app.post("/utils/ssh-keygen", async (req, res) => {
+  try {
+    const bits = Number(req.body?.bits) || 2048;
+    const comment = String(req.body?.comment || "").slice(0, 160);
+    const passphrase = req.body?.passphrase ? String(req.body.passphrase) : "";
+    const includePutty = Boolean(req.body?.includePutty);
+
+    if (bits !== 2048 && bits !== 3072 && bits !== 4096) {
+      return res
+        .status(400)
+        .json({ ok: false, error: "bits должен быть 2048/3072/4096" });
+    }
+
+    const keypair = await new Promise((resolve, reject) => {
+      forge.pki.rsa.generateKeyPair({ bits, workers: 2 }, (err, kp) => {
+        if (err) return reject(err);
+        resolve(kp);
+      });
+    });
+
+    const publicOpenSsh = ssh.publicKeyToOpenSSH(keypair.publicKey, comment);
+    const privateOpenSsh = ssh.privateKeyToOpenSSH(keypair.privateKey, passphrase);
+    const fp = ssh.getPublicKeyFingerprint(keypair.publicKey, {
+      encoding: "hex",
+      delimiter: ":",
+    });
+
+    const out = {
+      ok: true,
+      bits,
+      fingerprintMd5: fp,
+      publicKeyOpenSsh: publicOpenSsh,
+      privateKeyOpenSsh: privateOpenSsh,
+    };
+
+    if (includePutty) {
+      out.privateKeyPuttyPpk = ssh.privateKeyToPutty(
+        keypair.privateKey,
+        passphrase,
+        comment,
+      );
+    }
+
+    return res.json(out);
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
   }
 });
 
@@ -186,8 +246,8 @@ app.use((req, res) => {
   res.status(404).json({ ok: false, error: "Not found" });
 });
 
-app.listen(PORT, () => {
-  console.log(`API http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`API listening on http://${HOST}:${PORT}`);
   console.log("POST /auth/register | /auth/login | GET/PUT /auth/me|profile");
   console.log("GET|POST /journal/workouts | /journal/meals (Bearer)");
   console.log("POST /generate-plan");

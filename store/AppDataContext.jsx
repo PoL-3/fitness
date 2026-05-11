@@ -13,6 +13,7 @@ const KEY_G_PREFIX = '@fitness/goals:';
 const KEY_P_PREFIX = '@fitness/last_ai_plan:';
 const KEY_EG_PREFIX = '@fitness/exercise_goals:';
 const KEY_EC_PREFIX = '@fitness/exercise_goals_celebrated:';
+const KEY_DT_PREFIX = '@fitness/daily_tasks_progress:';
 
 function scopeKey(prefix, scope) {
   return `${prefix}${scope ?? 'anon'}`;
@@ -32,6 +33,7 @@ export function AppDataProvider({ children }) {
   const [exerciseGoals, setExerciseGoals] = useState([]);
   const [celebratedExerciseGoalIds, setCelebratedExerciseGoalIds] = useState([]);
   const [lastAiPlan, setLastAiPlan] = useState(null);
+  const [dailyTasksProgress, setDailyTasksProgress] = useState({});
   const [hydrated, setHydrated] = useState(false);
   const saveTimeout = useRef(null);
   const scope = user?.id ?? 'anon';
@@ -45,13 +47,14 @@ export function AppDataProvider({ children }) {
         if (!ready) {
           return;
         }
-        const [w, m, g, eg, ec, p] = await Promise.all([
+        const [w, m, g, eg, ec, p, dt] = await Promise.all([
           AsyncStorage.getItem(scopeKey(KEY_W_PREFIX, scope)),
           AsyncStorage.getItem(scopeKey(KEY_M_PREFIX, scope)),
           AsyncStorage.getItem(scopeKey(KEY_G_PREFIX, scope)),
           AsyncStorage.getItem(scopeKey(KEY_EG_PREFIX, scope)),
           AsyncStorage.getItem(scopeKey(KEY_EC_PREFIX, scope)),
           AsyncStorage.getItem(scopeKey(KEY_P_PREFIX, scope)),
+          AsyncStorage.getItem(scopeKey(KEY_DT_PREFIX, scope)),
         ]);
         if (cancelled) {
           return;
@@ -75,6 +78,11 @@ export function AppDataProvider({ children }) {
         setExerciseGoals(eg ? JSON.parse(eg) : []);
         setCelebratedExerciseGoalIds(ec ? JSON.parse(ec) : []);
         setLastAiPlan(p ? JSON.parse(p) : null);
+        try {
+          setDailyTasksProgress(dt ? JSON.parse(dt) : {});
+        } catch (_) {
+          setDailyTasksProgress({});
+        }
 
         // If logged in, refresh from server so different accounts see their own data.
         if (token) {
@@ -145,12 +153,22 @@ export function AppDataProvider({ children }) {
           [scopeKey(KEY_EG_PREFIX, scope), JSON.stringify(exerciseGoals)],
           [scopeKey(KEY_EC_PREFIX, scope), JSON.stringify(celebratedExerciseGoalIds)],
           [scopeKey(KEY_P_PREFIX, scope), JSON.stringify(lastAiPlan)],
+          [scopeKey(KEY_DT_PREFIX, scope), JSON.stringify(dailyTasksProgress)],
         ]);
       } catch (_) {
         /* ignore */
       }
     }, 400);
-  }, [workouts, meals, goals, exerciseGoals, celebratedExerciseGoalIds, lastAiPlan, scope]);
+  }, [
+    workouts,
+    meals,
+    goals,
+    exerciseGoals,
+    celebratedExerciseGoalIds,
+    lastAiPlan,
+    dailyTasksProgress,
+    scope,
+  ]);
 
   useEffect(() => {
     if (!hydrated) {
@@ -352,6 +370,32 @@ export function AppDataProvider({ children }) {
     setLastAiPlan(p);
   }, []);
 
+  const toggleDailyWorkoutTaskDone = useCallback((planStableKey, dayKey, taskId) => {
+    if (!planStableKey || !dayKey || !taskId) {
+      return;
+    }
+    setDailyTasksProgress((prev) => {
+      const byPlan = prev[planStableKey] || {};
+      const byDay = byPlan[dayKey] || {};
+      const wm = { ...(byDay.workouts || {}) };
+      if (wm[taskId]) {
+        delete wm[taskId];
+      } else {
+        wm[taskId] = true;
+      }
+      return {
+        ...prev,
+        [planStableKey]: {
+          ...byPlan,
+          [dayKey]: {
+            ...byDay,
+            workouts: wm,
+          },
+        },
+      };
+    });
+  }, []);
+
   const addExerciseGoal = useCallback((entry) => {
     let metricTargets = null;
     if (entry?.metricTargets && typeof entry.metricTargets === 'object') {
@@ -420,6 +464,7 @@ export function AppDataProvider({ children }) {
       exerciseGoals,
       celebratedExerciseGoalIds,
       lastAiPlan,
+      dailyTasksProgress,
       hydrated,
       addWorkout,
       addMeal,
@@ -428,6 +473,7 @@ export function AppDataProvider({ children }) {
       markExerciseGoalCelebrated,
       setGoals: setGoalsSafe,
       setLastAiPlan: setLastAiPlanSafe,
+      toggleDailyWorkoutTaskDone,
       getWorkoutById,
       getMealById,
       updateWorkout,
@@ -442,6 +488,7 @@ export function AppDataProvider({ children }) {
       exerciseGoals,
       celebratedExerciseGoalIds,
       lastAiPlan,
+      dailyTasksProgress,
       hydrated,
       addWorkout,
       addMeal,
@@ -450,6 +497,7 @@ export function AppDataProvider({ children }) {
       markExerciseGoalCelebrated,
       setGoalsSafe,
       setLastAiPlanSafe,
+      toggleDailyWorkoutTaskDone,
       getWorkoutById,
       getMealById,
       updateWorkout,

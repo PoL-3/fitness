@@ -32,30 +32,45 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      let t = null;
       try {
-        const t = await AsyncStorage.getItem(TOKEN_KEY);
+        t = await AsyncStorage.getItem(TOKEN_KEY);
+      } catch (_) {
+        /* ignore */
+      }
+      if (cancelled) {
+        return;
+      }
+      setToken(t);
+      // Не ждём сеть: иначе при недоступном API «висит» ready и все стартовые экраны пустые.
+      setReady(true);
+
+      if (!t) {
+        return;
+      }
+      try {
+        const { res, data } = await apiJson('/auth/me', { token: t });
         if (cancelled) {
           return;
         }
-        setToken(t);
-        if (t) {
-          const { res, data } = await apiJson('/auth/me', { token: t });
-          if (res.ok && data.ok && data.user) {
-            setUser(data.user);
-            const av = await AsyncStorage.getItem(avatarKeyFor(data.user.id));
-            if (!cancelled) {
-              setAvatarUriState(av || null);
-            }
-          } else {
-            await AsyncStorage.removeItem(TOKEN_KEY);
-            setToken(null);
+        if (res.ok && data.ok && data.user) {
+          setUser(data.user);
+          const av = await AsyncStorage.getItem(avatarKeyFor(data.user.id));
+          if (!cancelled) {
+            setAvatarUriState(av || null);
           }
+        } else {
+          await AsyncStorage.removeItem(TOKEN_KEY);
+          setToken(null);
         }
       } catch (_) {
-        /* ignore */
-      } finally {
         if (!cancelled) {
-          setReady(true);
+          try {
+            await AsyncStorage.removeItem(TOKEN_KEY);
+          } catch (_) {
+            /* ignore */
+          }
+          setToken(null);
         }
       }
     })();

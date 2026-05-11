@@ -31,6 +31,28 @@ export function isValidDayKey(s) {
   return !Number.isNaN(t);
 }
 
+/** Разница в календарных днях: toKey минус fromKey (может быть отрицательной). */
+export function diffCalendarDays(fromKey, toKey) {
+  if (!isValidDayKey(fromKey) || !isValidDayKey(toKey)) {
+    return 0;
+  }
+  const [fy, fm, fd] = String(fromKey).split('-').map(Number);
+  const [ty, tm, td] = String(toKey).split('-').map(Number);
+  const fromUtc = Date.UTC(fy, fm - 1, fd);
+  const toUtc = Date.UTC(ty, tm - 1, td);
+  return Math.round((toUtc - fromUtc) / 86400000);
+}
+
+/** ISO-ключ через delta календарных дней от dayKey */
+export function shiftDayKey(dayKey, deltaDays) {
+  if (!isValidDayKey(dayKey)) {
+    return dayKey;
+  }
+  const t = Date.parse(`${dayKey}T12:00:00`);
+  const d = new Date(t + Number(deltaDays) * 86400000);
+  return toDayKey(d.getTime());
+}
+
 /** Уникальные дни из записей с полем date, новые сверху */
 export function uniqueSortedDayKeys(items) {
   const set = new Set();

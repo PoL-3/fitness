@@ -1,0 +1,11 @@
+# Локальный reverse proxy к сервису api (Docker Compose).
+# HTTP :80  и  HTTPS :443 (встроенный CA Caddy — браузер попросит доверие один раз).
+
+:80 {
+	reverse_proxy api:3000
+}
+
+localhost {
+	tls internal
+	reverse_proxy api:3000
+}

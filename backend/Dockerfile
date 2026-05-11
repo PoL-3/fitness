@@ -14,4 +14,5 @@ EXPOSE 3000
 
 USER node
 
+# Фоновый режим хоста: docker run -d … (см. npm run docker:daemon)
 CMD ["node", "src/server.js"]

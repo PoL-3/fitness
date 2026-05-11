@@ -1,0 +1,3 @@
+fitrack.ru {
+    reverse_proxy  fitness-backend:3000
+}

@@ -6,7 +6,9 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch src/server.js"
+    "dev": "node --watch src/server.js",
+    "docker:build": "docker build -t fitness-backend .",
+    "docker:daemon": "docker run -d --name fitness-backend -p 3000:3000 --env-file .env fitness-backend"
   },
   "dependencies": {
     "axios": "^1.7.9",
